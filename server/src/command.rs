@@ -37,6 +37,7 @@ impl Command {
         }
     }
 
+    /// Executes the command against the given key-value store.
     pub fn execute(&self, store: &mut HashMap<String, String>) -> CommandExecutionResult {
         match self {
             Command::Add { key, value } => {
