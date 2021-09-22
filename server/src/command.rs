@@ -3,7 +3,8 @@ use crate::overrides::Result;
 
 pub enum Command {
     Add { key: String, value: String },
-    Get { key: String }
+    Get { key: String },
+    Remove { key: String },
 }
 
 impl Command {
@@ -23,6 +24,12 @@ impl Command {
                 }
                 Ok(Command::Get { key: tokens[1].into() })
             },
+            "REMOVE" => {
+                if tokens.len() != 2 {
+                    return Err(Box::new(ParseCommandError::MalformedInput));
+                }
+                Ok(Command::Remove { key: tokens[1].into() })
+            }
             _ => Err(Box::new(ParseCommandError::InvalidCommand { command: tokens[0].into() })),
         }
     }

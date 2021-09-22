@@ -50,7 +50,13 @@ impl Server {
                     Some(value) => stream.write(format!("0 {}", value).as_bytes())?,
                     None => stream.write("2 Not Found".as_bytes())?,
                 }
-            }
+            },
+            Command::Remove { key } => {
+                match self.storage.remove(&key) {
+                    Some(_) => stream.write("0 Removed".as_bytes())?,
+                    None => stream.write("2 Not Found".as_bytes())?,
+                }
+            },
         };
 
         Ok(())
