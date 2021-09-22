@@ -1,16 +1,16 @@
 use crate::command::Command;
 use crate::overrides::Result;
-use crate::store::Store;
+use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 
 pub struct Server {
-    store: Store,
+    store: HashMap<String, String>,
 }
 
 impl Server {
     pub fn new() -> Self {
-        Self { store: Store::new() }
+        Self { store: HashMap::new() }
     }
 
     /// Starts the server, and begins listening for connections on the given port.
@@ -37,9 +37,10 @@ impl Server {
         let end = input.iter().position(|x| *x == 0).unwrap();
         let mut input = String::from(std::str::from_utf8(&input[0..end])?);
         input.pop();
-
-        let result = self.store.execute_command(&Command::parse(&input)?);
-        stream.write(result.as_bytes())?;
+        
+        let command = Command::parse(&input)?;
+        let result = command.execute(&mut self.store);
+        stream.write(result.to_string().as_bytes())?;
         Ok(())
     }
 }

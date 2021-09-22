@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::fmt;
+
 use crate::errors::ParseCommandError;
 use crate::overrides::Result;
 
@@ -11,7 +14,7 @@ impl Command {
     /// Parses the given string into a Command type.
     pub fn parse(input: &String) -> Result<Command> {
         let tokens = input.split(" ").collect::<Vec<&str>>();
-        return match tokens[0] {
+        match tokens[0] {
             "ADD" => {
                 if tokens.len() != 3 {
                     return Err(Box::new(ParseCommandError::MalformedInput));
@@ -31,6 +34,49 @@ impl Command {
                 Ok(Command::Remove { key: tokens[1].into() })
             }
             _ => Err(Box::new(ParseCommandError::InvalidCommand { command: tokens[0].into() })),
+        }
+    }
+
+    pub fn execute(&self, store: &mut HashMap<String, String>) -> CommandExecutionResult {
+        match self {
+            Command::Add { key, value } => {
+                match store.insert(key.clone(), value.clone()) {
+                    Some(_) => CommandExecutionResult::Updated,
+                    None => CommandExecutionResult::Added,
+                }
+            },
+            Command::Get { key } => {
+                match store.get(key) {
+                    Some(value) => CommandExecutionResult::Got { value: value.clone() },
+                    None => CommandExecutionResult::NotFound,
+                }
+            },
+            Command::Remove { key } => {
+                match store.remove(key) {
+                    Some(_) => CommandExecutionResult::Removed,
+                    None => CommandExecutionResult::NotFound,
+                }
+            },
+        }
+    }
+}
+
+pub enum CommandExecutionResult {
+    Added,
+    Got { value: String },
+    Removed,
+    Updated,
+    NotFound,
+}
+
+impl fmt::Display for CommandExecutionResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Added => write!(f, "0 Added"),
+            Self::Got { value } => write!(f, "0 {}", value),
+            Self::Removed => write!(f, "0 Removed"),
+            Self::Updated => write!(f, "0 Updated"),
+            Self::NotFound => write!(f, "2 Not Found"),
         }
     }
 }
