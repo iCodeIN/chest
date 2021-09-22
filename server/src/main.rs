@@ -2,6 +2,7 @@ mod command;
 mod errors;
 mod overrides;
 mod server;
+mod store;
 
 use overrides::Result;
 use server::Server;

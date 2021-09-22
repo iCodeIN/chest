@@ -1,16 +1,16 @@
 use crate::command::Command;
 use crate::overrides::Result;
-use std::collections::HashMap;
+use crate::store::Store;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 
 pub struct Server {
-    storage: HashMap<String, String>,
+    store: Store,
 }
 
 impl Server {
     pub fn new() -> Self {
-        Self { storage: HashMap::new() }
+        Self { store: Store::new() }
     }
 
     /// Starts the server, and begins listening for connections on the given port.
@@ -38,27 +38,8 @@ impl Server {
         let mut input = String::from(std::str::from_utf8(&input[0..end])?);
         input.pop();
 
-        match Command::parse(&input)? {
-            Command::Add { key, value } => {
-                match self.storage.insert(key, value) {
-                    Some(_) => stream.write("0 Updated".as_bytes())?,
-                    None => stream.write("0 Added".as_bytes())?,
-                }
-            },
-            Command::Get { key } => {
-                match self.storage.get(&key) {
-                    Some(value) => stream.write(format!("0 {}", value).as_bytes())?,
-                    None => stream.write("2 Not Found".as_bytes())?,
-                }
-            },
-            Command::Remove { key } => {
-                match self.storage.remove(&key) {
-                    Some(_) => stream.write("0 Removed".as_bytes())?,
-                    None => stream.write("2 Not Found".as_bytes())?,
-                }
-            },
-        };
-
+        let result = self.store.execute_command(&Command::parse(&input)?);
+        stream.write(result.as_bytes())?;
         Ok(())
     }
 }
